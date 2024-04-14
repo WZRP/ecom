@@ -1,97 +1,159 @@
-<?php include 'includes/session.php'; ?>
 <?php
-	$output = '';
-	if(!isset($_GET['code']) OR !isset($_GET['user'])){
+include 'includes/session.php';
+require 'vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+$output = '';
+$conn = $pdo->open();
+
+if (isset($_POST['email'])) {
+	$code = bin2hex(random_bytes(3));
+
+	$stmt = $conn->prepare("UPDATE users SET activate_code=:code WHERE email=:email");
+	$stmt->execute(['code' => $code, 'email' => $_POST['email']]);
+
+	$mail = new PHPMailer(true);
+
+	try {
+		$mail->isSMTP();
+		$mail->Host = $_ENV['SMTP_HOST'];
+		$mail->SMTPAuth = true;
+		$mail->Username = $_ENV['SMTP_EMAIL'];
+		$mail->Password = $_ENV['SMTP_PASSWORD'];
+		$mail->SMTPSecure = 'tls';
+		$mail->Port = 587;
+
+		$mail->setFrom($_ENV['SMTP_EMAIL'], 'Mailer');
+		$mail->addAddress($_POST['email'], 'User');     // Add a recipient
+
+		$mail->isHTML(true);  // Set email format to HTML
+		$mail->Subject = 'Account Verification';
+		$mail->Body    = 'Your verification code is: ' . $code;
+
+		$mail->send();
 		$output .= '
-			<div class="alert alert-danger">
-                <h4><i class="icon fa fa-warning"></i> Error!</h4>
-                Code to activate account not found.
-            </div>
-            <h4>You may <a href="signup.php">Signup</a> or back to <a href="index.php">Homepage</a>.</h4>
-		'; 
+        <div class="alert alert-success">
+            <h4><i class="icon fa fa-check"></i> Success!</h4>
+            We have sent a verification code to <b>' . $_POST['email'] . '</b>.
+        </div>
+        <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
+      ';
+	} catch (Exception $e) {
+		echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
 	}
-	else{
-		$conn = $pdo->open();
+}
 
-		$stmt = $conn->prepare("SELECT *, COUNT(*) AS numrows FROM users WHERE activate_code=:code AND id=:id");
-		$stmt->execute(['code'=>$_GET['code'], 'id'=>$_GET['user']]);
-		$row = $stmt->fetch();
+if (!isset($_POST['verification_code']) || strlen($_POST['verification_code']) !== 6) {
+	$output .= '
+    <div class="alert alert-danger">
+        <h4><i class="icon fa fa-warning"></i> Error!</h4>
+        Please enter a valid verification code.
+    </div>
+    <h4>You may <a href="signup.php">Signup</a> or back to <a href="index.php">Homepage</a>.</h4>
+  ';
+	echo $output;
+	exit;
+}
 
-		if($row['numrows'] > 0){
-			if($row['status']){
-				$output .= '
-					<div class="alert alert-danger">
-		                <h4><i class="icon fa fa-warning"></i> Error!</h4>
-		                Account already activated.
-		            </div>
-		            <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
-				';
-			}
-			else{
-				try{
-					$stmt = $conn->prepare("UPDATE users SET status=:status WHERE id=:id");
-					$stmt->execute(['status'=>1, 'id'=>$row['id']]);
-					$output .= '
-						<div class="alert alert-success">
-			                <h4><i class="icon fa fa-check"></i> Success!</h4>
-			                Account activated - Email: <b>'.$row['email'].'</b>.
-			            </div>
-			            <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
-					';
-				}
-				catch(PDOException $e){
-					$output .= '
-						<div class="alert alert-danger">
-			                <h4><i class="icon fa fa-warning"></i> Error!</h4>
-			                '.$e->getMessage().'
-			            </div>
-			            <h4>You may <a href="signup.php">Signup</a> or back to <a href="index.php">Homepage</a>.</h4>
-					';
-				}
+if (isset($_POST['verification_code'])) {
+	$stmt = $conn->prepare("SELECT * FROM users WHERE email=:email");
+	$stmt->execute(['email' => $_POST['email']]);
+	$user = $stmt->fetch();
 
-			}
-			
-		}
-		else{
-			$output .= '
-				<div class="alert alert-danger">
-	                <h4><i class="icon fa fa-warning"></i> Error!</h4>
-	                Cannot activate account. Wrong code.
-	            </div>
-	            <h4>You may <a href="signup.php">Signup</a> or back to <a href="index.php">Homepage</a>.</h4>
-			';
-		}
-
-		$pdo->close();
+	if ($user['activate_code'] == $_POST['verification_code']) {
+		$stmt = $conn->prepare("UPDATE users SET status='1' WHERE email=:email");
+		$stmt->execute(['email' => $_POST['email']]);
+		$output .= '
+      <div class="alert alert-success">
+        <h4><i class="icon fa fa-check"></i> Success!</h4>
+        Your account has been activated. You may now <a href="login.php">Login</a>.
+      </div>
+    ';
+	} else {
+		$output .= '
+      <div class="alert alert-danger">
+        <h4><i class="icon fa fa-warning"></i> Error!</h4>
+        The verification code is incorrect.
+      </div>
+    ';
 	}
+} elseif (isset($_POST['email'])) {
+	$code = bin2hex(random_bytes(3));
+
+	$stmt = $conn->prepare("UPDATE users SET activate_code=:code WHERE email=:email");
+	$stmt->execute(['code' => $code, 'email' => $_POST['email']]);
+
+	$mail = new PHPMailer(true);
+
+	try {
+		$mail->isSMTP();
+		$mail->Host = $_ENV['SMTP_HOST'];
+		$mail->SMTPAuth = true;
+		$mail->Username = $_ENV['SMTP_EMAIL'];
+		$mail->Password = $_ENV['SMTP_PASSWORD'];
+		$mail->SMTPSecure = 'tls';
+		$mail->Port = 587;
+
+		$mail->setFrom($_ENV['SMTP_EMAIL'], 'Mailer');
+		$mail->addAddress($_POST['email'], 'User');
+
+		$mail->isHTML(true);
+		$mail->Subject = 'Account Verification';
+		$mail->Body    = 'Your verification code is: ' . $code;
+
+		$mail->send();
+		$output .= '
+        <div class="alert alert-success">
+            <h4><i class="icon fa fa-check"></i> Success!</h4>
+            We have sent a verification code to <b>' . $_POST['email'] . '</b>.
+        </div>
+        <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
+      ';
+	} catch (Exception $e) {
+		echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+	}
+} else {
+	$output .= '
+    <div class="alert alert-danger">
+        <h4><i class="icon fa fa-warning"></i> Error!</h4>
+        Email to activate account not found.
+    </div>
+    <h4>You may <a href="signup.php">Signup</a> or back to <a href="index.php">Homepage</a>.</h4>
+  ';
+}
+
+$pdo->close();
 ?>
 <?php include 'includes/header.php'; ?>
+
 <body class="hold-transition skin-blue layout-top-nav">
-<div class="wrapper">
+	<div class="wrapper">
 
-	<?php include 'includes/navbar.php'; ?>
-	 
-	  <div class="content-wrapper">
-	    <div class="container">
+		<?php include 'includes/navbar.php'; ?>
 
-	      <!-- Main content -->
-	      <section class="content">
-	        <div class="row">
-	        	<div class="col-sm-9">
-	        		<?php echo $output; ?>
-	        	</div>
-	        	<div class="col-sm-3">
-	        		<?php include 'includes/sidebar.php'; ?>
-	        	</div>
-	        </div>
-	      </section>
-	     
-	    </div>
-	  </div>
-  
-  	<?php include 'includes/footer.php'; ?>
-</div>
+		<div class="content-wrapper">
+			<div class="container">
 
-<?php include 'includes/scripts.php'; ?>
+				<section class="content">
+					<div class="row">
+						<div class="col-sm-9">
+							<?php echo $output; ?>
+						</div>
+						<div class="col-sm-3">
+							<?php include 'includes/sidebar.php'; ?>
+						</div>
+					</div>
+				</section>
+
+			</div>
+		</div>
+
+		<?php include 'includes/footer.php'; ?>
+	</div>
+
+	<?php include 'includes/scripts.php'; ?>
 </body>
+
 </html>
