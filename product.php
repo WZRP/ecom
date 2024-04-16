@@ -47,7 +47,7 @@ if ($product['date_view'] == $now) {
 				<!-- Main content -->
 				<section class="content">
 					<div class="row">
-						<div class="col-sm-9">
+						<div class="col-sm-12">
 							<div class="callout" id="callout" style="display:none">
 								<button type="button" class="close"><span aria-hidden="true">&times;</span></button>
 								<span class="message"></span>
@@ -84,9 +84,6 @@ if ($product['date_view'] == $now) {
 							</div>
 							<br>
 							<div class="fb-comments" data-href="http://localhost/ecommerce/product.php?product=<?php echo $slug; ?>" data-numposts="10" width="100%"></div>
-						</div>
-						<div class="col-sm-3">
-							<?php include 'includes/sidebar.php'; ?>
 						</div>
 					</div>
 				</section>
