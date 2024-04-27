@@ -47,8 +47,8 @@ if (isset($_POST['reset'])) {
 				$mail->SMTPAuth = true;
 				$mail->Username = SMTP_USERNAME;
 				$mail->Password = SMTP_PASSWORD;
-				$mail->SMTPSecure = 'ssl';
-				$mail->Port = 465;
+				$mail->SMTPSecure = 'tls';
+				$mail->Port = 587;
 
 				$mail->setFrom(SMTP_USERNAME);
 

@@ -36,6 +36,8 @@ if (isset($_POST['signup'])) {
             // Generate a 6-digit code
             $code = rand(100000, 999999);
 
+            $_SESSION['verification_code'] = $code;
+
             try {
                 $stmt = $conn->prepare("INSERT INTO users (email, password, firstname, lastname, activate_code, created_on) VALUES (:email, :password, :firstname, :lastname, :code, :now)");
                 $stmt->execute(['email' => $email, 'password' => $password, 'firstname' => $firstname, 'lastname' => $lastname, 'code' => $code, 'now' => $now]);
@@ -67,8 +69,8 @@ if (isset($_POST['signup'])) {
                             'allow_self_signed' => true
                         )
                     );
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->Port = 465;
+                    $mail->SMTPSecure = 'tls';
+                    $mail->Port = 587;
 
                     $mail->setFrom(getenv('SMTP_EMAIL'));
 

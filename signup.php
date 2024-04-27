@@ -99,7 +99,7 @@ if (isset($_SESSION['user'])) {
       var xhr = new XMLHttpRequest();
       xhr.open('POST', 'activate.php', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      xhr.send('email=' + encodeURIComponent(email));
+      xhr.send('email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password) + '&firstname=' + encodeURIComponent(firstName) + '&lastname=' + encodeURIComponent(lastName));
 
       xhr.onload = function() {
         if (xhr.status === 200) {

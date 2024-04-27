@@ -8,11 +8,29 @@ use PHPMailer\PHPMailer\Exception;
 $output = '';
 $conn = $pdo->open();
 
-if (isset($_POST['email'])) {
-	$code = bin2hex(random_bytes(3));
+if (isset($_POST['email'], $_POST['password'], $_POST['first_name'], $_POST['last_name'])) {
+	// Check if user exists first
+	$stmt = $conn->prepare("SELECT * FROM users WHERE email=:email");
+	$stmt->execute(['email' => $_POST['email']]);
+	$user = $stmt->fetch();
 
-	$stmt = $conn->prepare("UPDATE users SET activate_code=:code WHERE email=:email");
-	$stmt->execute(['code' => $code, 'email' => $_POST['email']]);
+	if (!$user) { // User doesn't exist, create a new record
+		$code = bin2hex(random_bytes(3));
+		$stmt = $conn->prepare("INSERT INTO users (email, password, firstname, lastname, activate_code, created_on, status) 
+                                VALUES (:email, :password, :firstname, :lastname, :code, :now, 'pending')");
+		$stmt->execute([
+			'email' => $_POST['email'],
+			'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+			'firstname' => $_POST['first_name'],
+			'lastname' => $_POST['last_name'],
+			'code' => $code,
+			'now' => date('Y-m-d')
+		]);
+	} else { // User exists, update the code 
+		$code = bin2hex(random_bytes(3));
+		$stmt = $conn->prepare("UPDATE users SET activate_code=:code WHERE email=:email");
+		$stmt->execute(['code' => $code, 'email' => $_POST['email']]);
+	}
 
 	$mail = new PHPMailer(true);
 
@@ -34,12 +52,12 @@ if (isset($_POST['email'])) {
 
 		$mail->send();
 		$output .= '
-        <div class="alert alert-success">
-            <h4><i class="icon fa fa-check"></i> Success!</h4>
-            We have sent a verification code to <b>' . $_POST['email'] . '</b>.
-        </div>
-        <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
-      ';
+            
+                 Success!
+                We have sent a verification code to <b>' . $_POST['email'] . '</b>. 
+            
+            <h4>You may <a href="login.php">Login</a> or back to <a href="index.php">Homepage</a>.</h4>
+        ';
 	} catch (Exception $e) {
 		echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
 	}
