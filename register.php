@@ -4,9 +4,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+require 'secret.php';
 
 include 'includes/session.php';
 
@@ -33,7 +31,6 @@ if (isset($_POST['signup'])) {
             $now = date('Y-m-d');
             $password = password_hash($password, PASSWORD_DEFAULT);
 
-            // Generate a 6-digit code
             $code = rand(100000, 999999);
 
             $_SESSION['verification_code'] = $code;
@@ -51,17 +48,15 @@ if (isset($_POST['signup'])) {
                     <h3>" . $code . "</h3>
                 ";
 
-                //Load phpmailer
                 require 'vendor/autoload.php';
 
                 $mail = new PHPMailer(true);
                 try {
-                    //Server settings
                     $mail->isSMTP();
-                    $mail->Host = getenv('SMTP_HOST');
+                    $mail->Host = $email_host;
                     $mail->SMTPAuth = true;
-                    $mail->Username = getenv('SMTP_EMAIL');
-                    $mail->Password = getenv('SMTP_PASSWORD');
+                    $mail->Username = $email;
+                    $mail->Password = $password;
                     $mail->SMTPOptions = array(
                         'ssl' => array(
                             'verify_peer' => false,
@@ -72,13 +67,11 @@ if (isset($_POST['signup'])) {
                     $mail->SMTPSecure = 'tls';
                     $mail->Port = 587;
 
-                    $mail->setFrom(getenv('SMTP_EMAIL'));
+                    $mail->setFrom($email);
 
-                    //Recipients
                     $mail->addAddress($email);
-                    $mail->addReplyTo(getenv('SMTP_EMAIL'));
+                    $mail->addReplyTo($email);
 
-                    //Content
                     $mail->isHTML(true);
                     $mail->Subject = 'ECommerce Site Sign Up';
                     $mail->Body    = $message;

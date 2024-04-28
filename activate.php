@@ -9,12 +9,12 @@ $output = '';
 $conn = $pdo->open();
 
 if (isset($_POST['email'], $_POST['password'], $_POST['first_name'], $_POST['last_name'])) {
-	// Check if user exists first
+
 	$stmt = $conn->prepare("SELECT * FROM users WHERE email=:email");
 	$stmt->execute(['email' => $_POST['email']]);
 	$user = $stmt->fetch();
 
-	if (!$user) { // User doesn't exist, create a new record
+	if (!$user) {
 		$code = bin2hex(random_bytes(3));
 		$stmt = $conn->prepare("INSERT INTO users (email, password, firstname, lastname, activate_code, created_on, status) 
                                 VALUES (:email, :password, :firstname, :lastname, :code, :now, 'pending')");
@@ -26,7 +26,7 @@ if (isset($_POST['email'], $_POST['password'], $_POST['first_name'], $_POST['las
 			'code' => $code,
 			'now' => date('Y-m-d')
 		]);
-	} else { // User exists, update the code 
+	} else {
 		$code = bin2hex(random_bytes(3));
 		$stmt = $conn->prepare("UPDATE users SET activate_code=:code WHERE email=:email");
 		$stmt->execute(['code' => $code, 'email' => $_POST['email']]);
@@ -36,17 +36,18 @@ if (isset($_POST['email'], $_POST['password'], $_POST['first_name'], $_POST['las
 
 	try {
 		$mail->isSMTP();
-		$mail->Host = $_ENV['SMTP_HOST'];
+		$mail->Host = $email_host;
 		$mail->SMTPAuth = true;
-		$mail->Username = $_ENV['SMTP_EMAIL'];
-		$mail->Password = $_ENV['SMTP_PASSWORD'];
+		$mail->Username = $email;
+		$mail->Password = $password;
 		$mail->SMTPSecure = 'tls';
 		$mail->Port = 587;
 
-		$mail->setFrom($_ENV['SMTP_EMAIL'], 'Mailer');
-		$mail->addAddress($_POST['email'], 'User');     // Add a recipient
+		$mail->setFrom($email, 'Mailer');
+		$mail->addAddress($_POST['email'], 'User');
 
-		$mail->isHTML(true);  // Set email format to HTML
+
+		$mail->isHTML(true);
 		$mail->Subject = 'Account Verification';
 		$mail->Body    = 'Your verification code is: ' . $code;
 
@@ -109,14 +110,14 @@ if (isset($_POST['verification_code'])) {
 
 	try {
 		$mail->isSMTP();
-		$mail->Host = $_ENV['SMTP_HOST'];
+		$mail->Host = $email_host;
 		$mail->SMTPAuth = true;
-		$mail->Username = $_ENV['SMTP_EMAIL'];
-		$mail->Password = $_ENV['SMTP_PASSWORD'];
+		$mail->Username = $email;
+		$mail->Password = $password;
 		$mail->SMTPSecure = 'tls';
 		$mail->Port = 587;
 
-		$mail->setFrom($_ENV['SMTP_EMAIL'], 'Mailer');
+		$mail->setFrom($email, 'Mailer');
 		$mail->addAddress($_POST['email'], 'User');
 
 		$mail->isHTML(true);

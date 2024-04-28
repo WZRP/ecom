@@ -30,7 +30,7 @@ if (isset($_SESSION['user'])) {
     <div class="register-box-body">
       <p class="login-box-msg">Register a new membership</p>
 
-      <form action="activate.php" method="POST">
+      <form id="signup_form" action="letsgo.php" method="POST">
         <div class="form-group has-feedback">
           <input type="text" class="form-control" name="firstname" placeholder="Firstname" value="<?php echo (isset($_SESSION['firstname'])) ? htmlspecialchars($_SESSION['firstname']) : '' ?>" required>
           <span class="glyphicon glyphicon-user form-control-feedback"></span>
@@ -51,17 +51,20 @@ if (isset($_SESSION['user'])) {
           <input type="password" class="form-control" name="repassword" placeholder="Retype password" required>
           <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
         </div>
+        <hr>
+        <div class="row">
+          <div class="col-xs-4">
+            <button type="submit" class="btn btn-primary btn-block btn-flat" name="signup"><i class="fa fa-pencil"></i> Sign Up</button>
+          </div>
+        </div>
+      </form>
+      <form id="verification_form" style="display: none;" action="check_verification_code.php" method="POST">
         <div class="form-group has-feedback">
           <input type="text" class="form-control" name="verification_code" placeholder="Verification Code" required>
           <span class="glyphicon glyphicon-ok form-control-feedback"></span>
         </div>
         <button type="button" id="send_verification_email" class="btn btn-primary">Send Verification Email</button>
-        <hr>
-        <div class="row">
-          <div class="col-xs-4">
-            <button type="submit" class="btn btn-primary btn-block btn-flat" name="signup" disabled><i class="fa fa-pencil"></i> Sign Up</button>
-          </div>
-        </div>
+        <button type="button" id="confirm_verification_code" class="btn btn-primary">Confirm</button>
       </form>
       <br>
       <a href="login.php">I already have a membership</a><br>
@@ -72,9 +75,9 @@ if (isset($_SESSION['user'])) {
   <?php include 'includes/scripts.php' ?>
 
   <script>
-    let isVerified = false; // Initially not verified
+    document.getElementById('signup_form').addEventListener('submit', function(event) {
+      event.preventDefault();
 
-    document.getElementById('send_verification_email').addEventListener('click', function() {
       var email = document.getElementsByName('email')[0].value;
       var password = document.getElementsByName('password')[0].value;
       var confirmPassword = document.getElementsByName('repassword')[0].value;
@@ -84,8 +87,8 @@ if (isset($_SESSION['user'])) {
       if (!email || !email.includes('@') || email.length > 40) {
         alert('Please enter a valid email address.');
         return;
-      } else if (!password || password.length < 8 || password.length > 40) {
-        alert('Password must be between 8 and 40 characters.');
+      } else if (!password || password.length < 4 || password.length > 40) {
+        alert('Password must be between 4 and 40 characters.');
         return;
       } else if (password !== confirmPassword) {
         alert('Passwords do not match.');
@@ -98,29 +101,81 @@ if (isset($_SESSION['user'])) {
         return;
       }
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'activate.php', true);
-      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      xhr.send('email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password) + '&firstname=' + encodeURIComponent(firstName) + '&lastname=' + encodeURIComponent(lastName));
+      var formData = new FormData(this);
+      formData.append('signup', 'true');
 
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'letsgo.php', true);
       xhr.onload = function() {
         if (xhr.status === 200) {
-          alert('A verification email has been sent to ' + email);
-          const response = JSON.parse(xhr.responseText);
-          if (response.success && response.message === 'Verification successful') {
-            alert('Verification successful!');
-            isVerified = true; // Set verification status
-            document.getElementsByName('signup')[0].disabled = false;
+          var response = JSON.parse(xhr.responseText);
+          if (response.success) {
+            document.getElementById('signup_form').style.display = 'none';
+            document.getElementById('verification_form').style.display = 'block';
+          } else {
+            alert(response.message);
+          }
+        } else {
+          alert('An error occurred while signing up');
+        }
+      };
+      xhr.send(formData);
+    });
+
+    document.getElementById('send_verification_email').addEventListener('click', function() {
+      var email = document.getElementsByName('email')[0].value;
+      var button = this;
+
+      button.disabled = true;
+      setTimeout(function() {
+        button.disabled = false;
+      }, 60000);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'letsgo.php', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var response = JSON.parse(xhr.responseText);
+          if (response.success) {
+            alert('Verification email sent! Please check your email for the verification code.');
           } else {
             alert('Verification failed. Please try again.');
           }
-        } else {
-          alert('An error occurred while sending the verification email');
         }
       };
+      xhr.send('email=' + encodeURIComponent(email));
+    });
 
-      this.disabled = true;
-      setTimeout(() => this.disabled = false, 60000);
+    document.getElementById('confirm_verification_code').addEventListener('click', function() {
+      var code = document.getElementsByName('verification_code')[0].value;
+      var email = document.getElementsByName('email')[0].value;
+
+      if (!/^\d{6}$/.test(code)) {
+        alert('Please enter a 6-digit number code.');
+        return;
+      }
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'letsgo.php', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          if (xhr.status === 200) {
+            console.log(xhr.responseText); // Add this line to log the response
+            var response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              alert('Verification successful! You are now signed up.');
+              window.location.href = 'index.php';
+            } else {
+              alert(response.message);
+            }
+          } else {
+            alert('An error occurred during verification: ' + xhr.status);
+          }
+        }
+      };
+      xhr.send('email=' + encodeURIComponent(email) + '&code=' + encodeURIComponent(code) + '&verify=true');
     });
   </script>
 </body>
