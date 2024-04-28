@@ -26,7 +26,6 @@ $pdo->close();
 		<div class="content-wrapper">
 			<div class="container">
 
-				<!-- Main content -->
 				<section class="content">
 					<div class="row">
 						<div class="col-sm-12">
@@ -36,12 +35,12 @@ $pdo->close();
 							$conn = $pdo->open();
 
 							try {
-								$inc = 4; // Changed from 3 to 4
+								$inc = 4;
 								$stmt = $conn->prepare("SELECT * FROM products WHERE category_id = :catid");
 								$stmt->execute(['catid' => $catid]);
 								foreach ($stmt as $row) {
 									$image = (!empty($row['photo'])) ? 'images/' . $row['photo'] : 'images/noimage.jpg';
-									$inc = ($inc == 4) ? 1 : $inc + 1; // Changed from 3 to 4
+									$inc = ($inc == 4) ? 1 : $inc + 1;
 									if ($inc == 1) echo "<div class='row'>";
 									echo "
            							<div class='col-sm-3'> <!-- Changed from col-sm-4 to col-sm-3 -->
@@ -56,11 +55,11 @@ $pdo->close();
            								</div>
            							</div>
            						";
-									if ($inc == 4) echo "</div>"; // Changed from 3 to 4
+									if ($inc == 4) echo "</div>";
 								}
 								if ($inc == 1) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div><div class='col-sm-3'></div></div>"; // Adjusted for 4 columns
 								if ($inc == 2) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div></div>"; // Adjusted for 4 columns
-								if ($inc == 3) echo "<div class='col-sm-3'></div></div>"; // Adjusted for 4 columns
+								if ($inc == 3) echo "<div class='col-sm-3'></div></div>";
 							} catch (PDOException $e) {
 								echo "There is some problem in connection: " . $e->getMessage();
 							}
