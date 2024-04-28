@@ -23,8 +23,8 @@ if (isset($_POST['signup'])) {
     } else {
         $conn = $pdo->open();
 
-        $stmt = $conn->prepare("SELECT COUNT(*) AS numrows FROM users WHERE email=:email");
-        $stmt->execute(['email' => $email]);
+        $stmt = $conn->prepare("UPDATE users SET password=:password, status='1' WHERE email=:email");
+        $stmt->execute(['email' => $email, 'password' => $password]);
         $row = $stmt->fetch();
         if ($row['numrows'] > 0) {
             $_SESSION['error'] = 'Email already taken';

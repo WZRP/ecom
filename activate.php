@@ -89,6 +89,7 @@ if (isset($_POST['verification_code'])) {
         Your account has been activated. You may now <a href="login.php">Login</a>.
       </div>
     ';
+		echo json_encode(['success' => true, 'message' => 'Verification successful']);
 	} else {
 		$output .= '
       <div class="alert alert-danger">
@@ -96,6 +97,7 @@ if (isset($_POST['verification_code'])) {
         The verification code is incorrect.
       </div>
     ';
+		echo json_encode(['success' => false, 'message' => 'Verification failed']);
 	}
 } elseif (isset($_POST['email'])) {
 	$code = bin2hex(random_bytes(3));

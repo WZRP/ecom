@@ -59,7 +59,7 @@ if (isset($_SESSION['user'])) {
         <hr>
         <div class="row">
           <div class="col-xs-4">
-            <button type="submit" class="btn btn-primary btn-block btn-flat" name="signup"><i class="fa fa-pencil"></i> Sign Up</button>
+            <button type="submit" class="btn btn-primary btn-block btn-flat" name="signup" disabled><i class="fa fa-pencil"></i> Sign Up</button>
           </div>
         </div>
       </form>
@@ -72,6 +72,8 @@ if (isset($_SESSION['user'])) {
   <?php include 'includes/scripts.php' ?>
 
   <script>
+    let isVerified = false; // Initially not verified
+
     document.getElementById('send_verification_email').addEventListener('click', function() {
       var email = document.getElementsByName('email')[0].value;
       var password = document.getElementsByName('password')[0].value;
@@ -104,6 +106,14 @@ if (isset($_SESSION['user'])) {
       xhr.onload = function() {
         if (xhr.status === 200) {
           alert('A verification email has been sent to ' + email);
+          const response = JSON.parse(xhr.responseText);
+          if (response.success && response.message === 'Verification successful') {
+            alert('Verification successful!');
+            isVerified = true; // Set verification status
+            document.getElementsByName('signup')[0].disabled = false;
+          } else {
+            alert('Verification failed. Please try again.');
+          }
         } else {
           alert('An error occurred while sending the verification email');
         }

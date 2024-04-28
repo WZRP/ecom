@@ -12,3 +12,6 @@
 
 # Ignore Composer's .lock file
 composer.lock
+
+# Ignore secret.php file
+secret.php
