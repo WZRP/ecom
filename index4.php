@@ -1,9 +1,40 @@
 <?php include 'includes/session.php'; ?>
 <?php include 'includes/header.php'; ?>
 
+<head>
+    <meta charset="utf-8">
+    <title>UnetiFood</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/animate/animate.min.css" rel="stylesheet">
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
 <body class="hold-transition skin-blue layout-top-nav">
     <div class="wrapper">
-        <?php include 'includes/navbar.php'; ?>
+
+        <?php include 'includes/navbar2.php'; ?>
 
         <div class="content-wrapper">
             <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
@@ -31,113 +62,57 @@
                 </a>
             </div>
 
-            <div class="container-xxl py-5">
-                <div class="container">
-                    <div class="row g-0 gx-5 align-items-end">
-                        <div class="col-lg-6">
-                            <div class="section-header text-start mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
-                                <h1 class="display-5 mb-3">Our Fruits</h1>
-                                <p>Enjoy our selection of the freshest and most delicious domestic and imported fruits.</p>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
-                            <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
-                                <li class="nav-item me-2">
-                                    <a class="btn btn-outline-primary border-2 active" data-bs-toggle="pill" href="#tab-1">Domestic Fruits</a>
-                                </li>
-                                <li class="nav-item me-2">
-                                    <a class="btn btn-outline-primary border-2" data-bs-toggle="pill" href="#tab-2">Imported Fruits</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="tab-content">
-                        <div id="tab-1" class="tab-pane fade show p-0 active">
-                            <div class="row g-4">
-                                <?php
-                                $conn = $pdo->open();
+            <div class="container">
+                <section class="content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <?php
+                            if (isset($_SESSION['error'])) {
+                                echo "<div class='alert alert-danger'>" . $_SESSION['error'] . "</div>";
+                                unset($_SESSION['error']);
+                            }
+                            ?>
 
-                                try {
-                                    $stmt = $conn->prepare("SELECT * FROM products WHERE category_id = 1 ORDER BY name ASC");
-                                    $stmt->execute();
-                                    foreach ($stmt as $row) {
-                                        $image = !empty($row['photo']) ? 'images/' . $row['photo'] : 'images/noimage.jpg';
-                                        $slug = str_replace(' ', '-', strtolower($row['name']));
-                                        echo "
-                                            <div class='col-xl-3 col-lg-4 col-md-6 wow fadeInUp' data-wow-delay='0.1s'>
-                                                <div class='product-item'>
-                                                    <div class='position-relative bg-light overflow-hidden'>
-                                                        <img class='img-fluid w-100' src='" . $image . "' alt=''>
-                                                        <div class='bg-secondary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3'>New</div>
-                                                    </div>
-                                                    <div class='text-center p-4'>
-                                                        <a class='d-block h5 mb-2' href='product.php?product=" . $slug . "'>" . $row['name'] . "</a>
-                                                        <span class='text-primary me-1'>$" . number_format($row['price'], 0) . "</span>
-                                                    </div>
-                                                    <div class='d-flex border-top'>
-                                                        <small class='w-50 text-center border-end py-2'>
-                                                            <a class='text-body' href='product.php?product=" . $slug . "'><i class='fa fa-eye text-primary me-2'></i>View detail</a>
-                                                        </small>
-                                                        <small class='w-50 text-center py-2'>
-                                                            <a class='text-body' href='#'><i class='fa fa-shopping-bag text-primary me-2'></i>Add to cart</a>
-                                                        </small>
-                                                    </div>
+                            <h2>All Products</h2>
+                            <?php
+                            $conn = $pdo->open();
+
+                            try {
+                                $inc = 4;
+                                $stmt = $conn->prepare("SELECT * FROM products ORDER BY name ASC");
+                                $stmt->execute();
+                                foreach ($stmt as $row) {
+                                    $image = (!empty($row['photo'])) ? 'images/' . $row['photo'] : 'images/noimage.jpg';
+                                    $inc = ($inc == 4) ? 1 : $inc + 1;
+                                    if ($inc == 1) echo "<div class='row'>";
+                                    echo "
+                                        <div class='col-sm-3'>
+                                            <div class='box box-solid'>
+                                                <div class='box-body prod-body'>
+                                                    <img src='" . $image . "' width='100%' height='230px' class='thumbnail'>
+                                                    <h5><a href='product.php?product=" . $row['slug'] . "'>" . $row['name'] . "</a></h5>
+                                                </div>
+                                                <div class='box-footer'>
+                                                    <b>&#8363; " . number_format($row['price']) . "</b>
                                                 </div>
                                             </div>
-                                        ";
-                                    }
-                                } catch (PDOException $e) {
-                                    echo "There is some problem in connection: " . $e->getMessage();
+                                        </div>
+                                    ";
+                                    if ($inc == 4) echo "</div>";
                                 }
+                                if ($inc == 1) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div><div class='col-sm-3'></div></div>";
+                                if ($inc == 2) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div></div>";
+                                if ($inc == 3) echo "<div class='col-sm-3'></div></div>";
+                            } catch (PDOException $e) {
+                                echo "There is some problem in connection: " . $e->getMessage();
+                            }
 
-                                $pdo->close();
-                                ?>
-                            </div>
-                        </div>
-                        <div id="tab-2" class="tab-pane fade show p-0">
-                            <div class="row g-4">
-                                <?php
-                                $conn = $pdo->open();
+                            $pdo->close();
 
-                                try {
-                                    $stmt = $conn->prepare("SELECT * FROM products WHERE category_id = 2 ORDER BY name ASC");
-                                    $stmt->execute();
-                                    foreach ($stmt as $row) {
-                                        $image = !empty($row['photo']) ? 'images/' . $row['photo'] : 'images/noimage.jpg';
-                                        $slug = str_replace(' ', '-', strtolower($row['name']));
-                                        echo "
-                                            <div class='col-xl-3 col-lg-4 col-md-6 wow fadeInUp' data-wow-delay='0.1s'>
-                                                <div class='product-item'>
-                                                    <div class='position-relative bg-light overflow-hidden'>
-                                                        <img class='img-fluid w-100' src='" . $image . "' alt=''>
-                                                        <div class='bg-secondary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3'>New</div>
-                                                    </div>
-                                                    <div class='text-center p-4'>
-                                                        <a class='d-block h5 mb-2' href='product.php?product=" . $slug . "'>" . $row['name'] . "</a>
-                                                        <span class='text-primary me-1'>$" . number_format($row['price'], 0) . "</span>
-                                                    </div>
-                                                    <div class='d-flex border-top'>
-                                                        <small class='w-50 text-center border-end py-2'>
-                                                            <a class='text-body' href='product.php?product=" . $slug . "'><i class='fa fa-eye text-primary me-2'></i>View detail</a>
-                                                        </small>
-                                                        <small class='w-50 text-center py-2'>
-                                                            <a class='text-body' href='#'><i class='fa fa-shopping-bag text-primary me-2'></i>Add to cart</a>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ";
-                                    }
-                                } catch (PDOException $e) {
-                                    echo "There is some problem in connection: " . $e->getMessage();
-                                }
-
-                                $pdo->close();
-                                ?>
-                            </div>
+                            ?>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
 

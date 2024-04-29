@@ -22,7 +22,7 @@ function generateRow($from, $to, $conn)
                 <td>' . date('M d, Y', strtotime($row['sales_date'])) . '</td>
                 <td>' . $row['firstname'] . ' ' . $row['lastname'] . '</td>
                 <td>' . $row['pay_id'] . '</td>
-                <td align="right">&#36; ' . number_format($amount, 2) . '</td>
+                <td align="right">&#8363; ' . number_format($amount) . '</td>
             </tr>
             ';
 	}
@@ -30,7 +30,7 @@ function generateRow($from, $to, $conn)
 	$contents .= '
             <tr>
                 <td colspan="3" align="right"><b>Total</b></td>
-                <td align="right"><b>&#36; ' . number_format($total, 2) . '</b></td>
+                <td align="right"><b>&#8363; ' . number_format($total) . '</b></td>
             </tr>
         ';
 	return $contents;

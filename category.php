@@ -50,15 +50,15 @@ $pdo->close();
                									<h5><a href='product.php?product=" . $row['slug'] . "'>" . $row['name'] . "</a></h5>
                								</div>
                								<div class='box-footer'>
-               									<b>&#36; " . number_format($row['price'], 2) . "</b>
+               									<b>&#8363; " . number_format($row['price']) . "</b>
                								</div>
            								</div>
            							</div>
            						";
 									if ($inc == 4) echo "</div>";
 								}
-								if ($inc == 1) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div><div class='col-sm-3'></div></div>"; // Adjusted for 4 columns
-								if ($inc == 2) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div></div>"; // Adjusted for 4 columns
+								if ($inc == 1) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div><div class='col-sm-3'></div></div>";
+								if ($inc == 2) echo "<div class='col-sm-3'></div><div class='col-sm-3'></div></div>";
 								if ($inc == 3) echo "<div class='col-sm-3'></div></div>";
 							} catch (PDOException $e) {
 								echo "There is some problem in connection: " . $e->getMessage();
